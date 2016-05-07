@@ -56,6 +56,13 @@
                 hook = name.indexOf('dojo/has') === 0
                             || name.indexOf('./has') === 0 && parentName.split('/').slice(-2)[0] === 'dojo';
 
+            // SystemJS erroneously thinks dojo/request/node is required by dojo/request in the browser even though it's
+            // hidden by an if statement so the module can support both node and the browser.
+            // Just point to our export undefined module for now.
+            if (name.indexOf('./request/node') > -1 && parentName.indexOf('dojo/') > -1) {
+                return '@intern-systemjs-loader:undefined';
+            }
+
             if (hook) {
                 // If a direct request the module, return the one we set earlier
                 if (name.slice(-4) === '/has') {
@@ -66,6 +73,12 @@
                 target = name.slice(name.indexOf('!') + 1);
                 while (current = matcher.exec(target)) {
                     target = has(current[0]) ? current[1] : current[2];
+                }
+
+                // Handle relative modules
+                if (/^\.{1,2}\//.test(target)) {
+                    target = parentName.split('/').slice(0, -1).concat([target])
+                                .join('/').replace(/[^/]+\/\.\.\//, '').replace(/\.\//, '');
                 }
 
                 return target ? normalize.call(this, target) : '@intern-systemjs-loader:undefined';
