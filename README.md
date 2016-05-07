@@ -39,3 +39,5 @@ configuration in your `intern.js` file:
         }
     }
 ```
+
+You should also disable instrumentation of any ES modules as Istanbul fails hard if it tries to cover them.
