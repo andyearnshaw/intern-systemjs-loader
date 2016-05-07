@@ -8,7 +8,7 @@ to enable writing tests and source files without requiring a pre-compile step.
 This loader is a work-in-progress and currently only works in Intern's _client_
 environment.
 
-## Installing and configuration
+### Installing and configuration
 
 Install with NPM:
 
@@ -24,7 +24,7 @@ Then, modify your Intern configuration to use the loader:
     }
 ```
 
-## Using Babel to transpile ES modules
+### Using Babel to transpile ES modules
 
 Simply `npm install systemjs-plugin-babel`, then specify the `loaderOptions`
 configuration in your `intern.js` file:
