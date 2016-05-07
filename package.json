@@ -1,0 +1,21 @@
+{
+  "name": "intern-systemjs-loader",
+  "version": "0.0.1-wip",
+  "description": "A wrapper for using SystemJS as Intern's loader",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "intern",
+    "tdd",
+    "bdd",
+    "systemjs",
+    "qunit"
+  ],
+  "author": "Andy Earnshaw <andyearnshaw@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "systemjs": "^0.19.27"
+  }
+}
