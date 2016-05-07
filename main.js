@@ -5,8 +5,6 @@
         thisBase = '/node_modules/intern-systemjs-loader',
         polyfillUrl = '/node_modules/systemjs/dist/system-polyfills.js',
         systemJSUrl = '/node_modules/systemjs/dist/system.src.js',
-        hasModule = generateGUID(),
-        hasPlugin = generateGUID(),
         requireQueue = [],
         defineQueue = [],
         configQueue = [
@@ -30,10 +28,11 @@
         ];
 
     function setHooks() {
-        var hasMap = {
-            'host-browser': true,
-            'host-node': false
-        };
+        var normalize = SystemJS.normalize,
+            hasMap = {
+                'host-browser': true,
+                'host-node': false
+            };
 
         function has(str) {
             return hasMap[str];
@@ -44,36 +43,32 @@
         };
 
         // dojo/has is both a function-returning module and a loader-plugin.
-        // SystemJS doesn't support this, so we need to hack and split up the behaviours.
-        // No need to normalize the GUID before setting.
-        SystemJS.set(hasModule, System.newModule({
-            __useDefault: true,
-            default: has,
-        }));
-
-        SystemJS.set(hasPlugin, System.newModule({
-            fetch: function (load) {
-                var res = load.name.slice(hasPlugin.length + 1).split('?'),
-                    shouldLoad = has(res[0]);
-
-                return shouldLoad
-                    ? 'define(["'+ res[1] +'"], function (m) { return m; })'
-                    : 'define([], function () {})';
-            }
-        }));
-
-        var normalize = SystemJS.normalize;
+        // SystemJS doesn't support this, so we need to hack the behavior in.
+        SystemJS.set('@intern-systemjs-loader:has', System.newModule({ __useDefault: true, default: has, }));
+        SystemJS.set('@intern-systemjs-loader:undefined', System.newModule({ __useDefault: true }));
 
         // Normalize "dojo/has" to either our hasPlugin or hasModule GUIDs depending on whether it's
         // required as a loader plugin or a module.
         SystemJS.normalize = function (name, parentName, parentAddress) {
-            var split,
+            var current, split, target,
+                // Matcher for `dojo/has!foo?bar:baz`, where bar or baz could also be a ternary condition
+                matcher = /[^?]+(?=\?([^:]+)(?::(.+))?)/,
                 hook = name.indexOf('dojo/has') === 0
-                            || name === './has' && parentName.split('/').slice(-2)[0] === 'dojo';
+                            || name.indexOf('./has') === 0 && parentName.split('/').slice(-2)[0] === 'dojo';
 
             if (hook) {
-                split = name.split('!');
-                return name.replace(/^(?:dojo|\.)\/has/, split[1] ? hasPlugin : hasModule);
+                // If a direct request the module, return the one we set earlier
+                if (name.slice(-4) === '/has') {
+                    return '@intern-systemjs-loader:has';
+                }
+
+                // Loop over the conditions to figure out which module to load (if any)
+                target = name.slice(name.indexOf('!') + 1);
+                while (current = matcher.exec(target)) {
+                    target = has(current[0]) ? current[1] : current[2];
+                }
+
+                return target ? normalize.call(this, target) : '@intern-systemjs-loader:undefined';
             }
 
             // intern/main is the same, it defines some properties but also provides access to the tdd,
@@ -116,13 +111,6 @@
         script.onload = cb;
 
         document.body.appendChild(script);
-    }
-
-    function generateGUID () {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-            return v.toString(16);
-        });
     }
 
     // Provide the initial define, require and config functions. These just push the arguments to
