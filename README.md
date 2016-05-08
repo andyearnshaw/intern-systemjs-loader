@@ -5,7 +5,7 @@ be used with Intern. It hooks the loader to provide some of Intern/Dojo's
 hybrid plugin-modules. Transpilers such as Babel or TypeScript can be configured
 to enable writing tests and source files without requiring a pre-compile step.
 
-This loader is a work-in-progress and currently only works in Intern's _client_
+This loader is a work-in-progress and currently only works in Intern's _runner_
 environment.
 
 ### Installing and configuration
@@ -37,7 +37,15 @@ configuration in your `intern.js` file:
             'plugin-babel': '/node_modules/systemjs-plugin-babel/plugin-babel.js',
             'systemjs-babel-build': '/node_modules/systemjs-plugin-babel/systemjs-babel-browser.js'
         }
-    }
+    },
+
+    excludeInstrumentation: true
 ```
 
-You should also disable instrumentation of any ES modules as Istanbul fails hard if it tries to cover them.
+Disabling instrumentation of any ES modules is necessary as Istanbul fails hard
+if it tries to cover them.
+
+### Troubleshooting
+
+PhantomJS appears to hang without throwing errors if an ES module has a syntax
+error.  Use ChromeDriver instead of PhantomJS if testing locally.
