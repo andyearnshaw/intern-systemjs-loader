@@ -1,6 +1,6 @@
 {
   "name": "intern-systemjs-loader",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A wrapper for using SystemJS as Intern's loader",
   "main": "index.js",
   "repository": "andyearnshaw/intern-systemjs-loader",

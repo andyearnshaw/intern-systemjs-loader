@@ -5,8 +5,8 @@ be used with Intern. It hooks the loader to provide some of Intern/Dojo's
 hybrid plugin-modules. Transpilers such as Babel or TypeScript can be configured
 to enable writing tests and source files without requiring a pre-compile step.
 
-This loader is a work-in-progress and currently only works in Intern's _runner_
-environment.
+This loader is a work-in-progress and not all reporters/configuration options
+have been thoroughly tested.
 
 ### Installing and configuration
 
