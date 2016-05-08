@@ -1,16 +1,17 @@
-(function () {
+(function (global) {
     var realRequire, realDefine,
+        nodeRequire = require,
         slice = Array.prototype.slice,
-        internBase = '/node_modules/intern',
-        thisBase = '/node_modules/intern-systemjs-loader',
-        polyfillUrl = '/node_modules/systemjs/dist/system-polyfills.js',
-        systemJSUrl = '/node_modules/systemjs/dist/system.src.js',
+        internBase = 'node_modules/intern',
+        thisBase = 'node_modules/intern-systemjs-loader',
+        polyfillUrl = 'node_modules/systemjs/dist/system-polyfills.js',
+        systemJSUrl = 'node_modules/systemjs/dist/system.src.js',
         requireQueue = [],
         defineQueue = [],
         configQueue = [
             [{
                 pluginFirst: true,
-                baseURL: '/',
+                baseURL: nodeRequire ?  '' : '/',
                 meta: {
                     'intern/*': { scriptLoad: true },
                     'dojo/*': { scriptLoad: true }
@@ -30,8 +31,8 @@
     function setHooks() {
         var normalize = SystemJS.normalize,
             hasMap = {
-                'host-browser': true,
-                'host-node': false
+                'host-browser': !nodeRequire,
+                'host-node': !!nodeRequire
             };
 
         function has(str) {
@@ -46,10 +47,14 @@
         // SystemJS doesn't support this, so we need to hack the behavior in.
         SystemJS.set('@intern-systemjs-loader:has', System.newModule({ __useDefault: true, default: has, }));
         SystemJS.set('@intern-systemjs-loader:undefined', System.newModule({ __useDefault: true }));
+        SystemJS.set('@intern-systemjs-loader:node', System.newModule({
+            fetch: function () { return ''; },
+            instantiate: function (load) { return nodeRequire(load.address); }
+        }));
 
         // Normalize "dojo/has" to either our hasPlugin or hasModule GUIDs depending on whether it's
         // required as a loader plugin or a module.
-        SystemJS.normalize = function (name, parentName, parentAddress) {
+        SystemJS.normalize = function normalizeForIntern (name, parentName, parentAddress) {
             var current, split, target,
                 // Matcher for `dojo/has!foo?bar:baz`, where bar or baz could also be a ternary condition
                 matcher = /[^?]+(?=\?([^:]+)(?::(.+))?)/,
@@ -81,7 +86,8 @@
                                 .join('/').replace(/[^/]+\/\.\.\//, '').replace(/\.\//, '');
                 }
 
-                return target ? normalize.call(this, target) : '@intern-systemjs-loader:undefined';
+                // Run the result through this normalizer again if required
+                return target ? normalizeForIntern.call(this, target) : '@intern-systemjs-loader:undefined';
             }
 
             // intern/main is the same, it defines some properties but also provides access to the tdd,
@@ -91,30 +97,18 @@
                 return normalize.call(this, internBase + '/lib/interfaces/' + name.split('!')[1] + '.js');
             }
 
+            // dojo/node!x can be normalized to @node/x
+            if (name.indexOf('dojo/node!') === 0) {
+                return '@intern-systemjs-loader:node!' + name.split('!')[1];
+            }
+
             return normalize.call(this, name, parentName, parentAddress);
         };
 
     }
 
     function loadSystemJS() {
-        loadScript(systemJSUrl, function () {
-            window.require = realRequire = System.amdRequire;
-            window.define = realDefine = System.amdDefine;
-            require.config = System.config.bind(System);
-
-            setHooks();
-
-            // Flush any queues that were populated before SystemJS finished loading
-            while (configQueue.length) {
-                System.config.apply(System, configQueue.shift());
-            }
-            while (defineQueue.length) {
-                realDefine.apply(null, defineQueue.shift());
-            }
-            while (requireQueue.length) {
-                realRequire.apply(null, requireQueue.shift());
-            }
-        });
+        loadScript(systemJSUrl, swapLoader);
     }
 
     function loadScript(src, cb) {
@@ -126,9 +120,29 @@
         document.body.appendChild(script);
     }
 
+    function swapLoader() {
+        global.require = realRequire = System.amdRequire;
+        global.define = realDefine = System.amdDefine;
+        realRequire.config = System.config.bind(System);
+        realRequire.nodeRequire = nodeRequire;
+
+        setHooks();
+
+        // Flush any queues that were populated before SystemJS finished loading
+        while (configQueue.length) {
+            System.config.apply(System, configQueue.shift());
+        }
+        while (defineQueue.length) {
+            realDefine.apply(null, defineQueue.shift());
+        }
+        while (requireQueue.length) {
+            realRequire.apply(null, requireQueue.shift());
+        }
+    }
+
     // Provide the initial define, require and config functions. These just push the arguments to
     // arrays so they can be recalled when SystemJS has finished loading.
-    window.define = function () {
+    global.define = function () {
         if (realDefine) {
             realDefine.apply(null, arguments);
         }
@@ -137,7 +151,7 @@
         }
     };
 
-    window.require = function () {
+    global.require = function () {
         if (realRequire) {
             realRequire.apply(null, arguments);
         }
@@ -150,11 +164,15 @@
         configQueue.push(slice.call(arguments));
     };
 
+    if (nodeRequire) {
+        global.SystemJS = global.System = nodeRequire('systemjs');
+        swapLoader();
+    }
     // Load when.js first if Promise is unavailable
-    if (typeof Promise === 'undefined') {
+    else if (typeof Promise === 'undefined') {
         loadScript(polyfillUrl, loadSystemJS);
     }
     else {
         loadSystemJS();
     }
-})();
+})(typeof global !== 'undefined' ? global : window);

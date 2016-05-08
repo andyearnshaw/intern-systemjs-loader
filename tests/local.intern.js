@@ -39,7 +39,8 @@ define({
 	tunnel: 'NullTunnel',
 
     loaders: {
-        'host-browser': '../main.js'
+        'host-node': require.nodeRequire && require.nodeRequire('path').resolve('main.js'), // relative to package.json
+        'host-browser': '../main.js' // relative to this file
     },
 
 	// Configuration options for the module loader; any AMD configuration options supported by the specified AMD loader
@@ -48,8 +49,8 @@ define({
         transpiler: 'plugin-babel',
 
         map: {
-            'plugin-babel': '/node_modules/systemjs-plugin-babel/plugin-babel.js',
-            'systemjs-babel-build': '/node_modules/systemjs-plugin-babel/systemjs-babel-browser.js',
+            'plugin-babel': 'node_modules/systemjs-plugin-babel/plugin-babel.js',
+            'systemjs-babel-build': 'node_modules/systemjs-plugin-babel/systemjs-babel-browser.js',
         },
 
 		// Packages that should be registered with the loader in each testing environment
@@ -57,7 +58,7 @@ define({
 	},
 
 	// Non-functional test suite(s) to run in each browser
-	suites: [ '/tests/sample.spec.js' ],
+	suites: [ 'tests/sample.spec.js' ],
 
 	// Functional test suite(s) to run in each browser once non-functional tests are completed
 	functionalSuites: [ /* 'myPackage/tests/functional' */ ],
