@@ -20,6 +20,7 @@ Then, modify your Intern configuration to use the loader:
 
 ```
     loaders: {
+      'host-node': 'node_modules/intern-systemjs-loader/main.js',
       'host-browser': 'node_modules/intern-systemjs-loader/main.js'
     }
 ```
