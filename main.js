@@ -1,11 +1,11 @@
 (function (global) {
     var realRequire, realDefine,
         nodeRequire = require,
+        parentModule = typeof module !== 'undefined' && module.parent,
         slice = Array.prototype.slice,
         internBase = 'node_modules/intern',
-        thisBase = 'node_modules/intern-systemjs-loader',
-        polyfillUrl = 'node_modules/systemjs/dist/system-polyfills.js',
-        systemJSUrl = 'node_modules/systemjs/dist/system.src.js',
+        polyfillUrl = '/node_modules/systemjs/dist/system-polyfills.js',
+        systemJSUrl = '/node_modules/systemjs/dist/system.src.js',
         requireQueue = [],
         defineQueue = [],
         configQueue = [
@@ -49,7 +49,7 @@
         SystemJS.set('@intern-systemjs-loader:undefined', System.newModule({ __useDefault: true }));
         SystemJS.set('@intern-systemjs-loader:node', System.newModule({
             fetch: function () { return ''; },
-            instantiate: function (load) { return nodeRequire(load.address); }
+            instantiate: function (load) { return parentModule.require(load.address); }
         }));
 
         // Normalize "dojo/has" to either our hasPlugin or hasModule GUIDs depending on whether it's
@@ -165,7 +165,25 @@
     };
 
     if (nodeRequire) {
+        // Pre-cache punycode so that global define doesn't break it
+        // see https://github.com/bestiejs/punycode.js/issues/47
+        nodeRequire('punycode');
+
+        // Require the loader and set global
         global.SystemJS = global.System = nodeRequire('systemjs');
+
+        // Fix decanonicalize so it doesn't add file:// to intern/ paths
+        var decanonicalize = System.decanonicalize;
+        System.decanonicalize = function (name, id) {
+            var done = decanonicalize.call(this, name, id);
+
+            if (/^intern\//.test(name)) {
+                done = done.replace(/^file:\/\//, '');
+            }
+
+            return done;
+        };
+
         swapLoader();
     }
     // Load when.js first if Promise is unavailable

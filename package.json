@@ -1,8 +1,8 @@
 {
   "name": "intern-systemjs-loader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A wrapper for using SystemJS as Intern's loader",
-  "main": "index.js",
+  "main": "main.js",
   "repository": "andyearnshaw/intern-systemjs-loader",
   "scripts": {
     "test": "phantomjs --remote-debugger-port=9001 --webdriver=4444 & ./node_modules/.bin/intern-runner config=tests/local.intern",
