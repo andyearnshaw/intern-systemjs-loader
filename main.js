@@ -49,7 +49,14 @@
         SystemJS.set('@intern-systemjs-loader:undefined', System.newModule({ __useDefault: true }));
         SystemJS.set('@intern-systemjs-loader:node', System.newModule({
             fetch: function () { return ''; },
-            instantiate: function (load) { return parentModule.require(load.address); }
+            instantiate: function (load) {
+                // Offer a helpful message if someone tries to use this in the browser
+                if (!parentModule || !parentModule.require) {
+                    throw new ReferenceError('Node require not found (is this a browser?)');
+                }
+
+                return parentModule.require(load.address);
+            }
         }));
 
         // Normalize "dojo/has" to either our hasPlugin or hasModule GUIDs depending on whether it's
@@ -98,7 +105,7 @@
             }
 
             // dojo/node!x can be normalized to @node/x
-            if (name.indexOf('dojo/node!') === 0) {
+            if (/^(?:intern\/)?dojo\/node!/.test(name)) {
                 return '@intern-systemjs-loader:node!' + name.split('!')[1];
             }
 
