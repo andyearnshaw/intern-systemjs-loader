@@ -18,10 +18,10 @@
   "author": "Andy Earnshaw <andyearnshaw@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "systemjs": "^0.19.27"
+    "systemjs": "^0.19.40"
   },
   "devDependencies": {
-    "intern": "^3.2.0",
+    "intern": "^3.3.2",
     "systemjs-plugin-babel": "0.0.10"
   }
 }
