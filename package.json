@@ -5,7 +5,7 @@
   "main": "main.js",
   "repository": "andyearnshaw/intern-systemjs-loader",
   "scripts": {
-    "test": "phantomjs --remote-debugger-port=9001 --webdriver=4444 & ./node_modules/.bin/intern-runner config=tests/local.intern",
+    "test": "./node_modules/.bin/intern-runner config=tests/local.intern",
     "testClient": "./node_modules/.bin/intern-client config=tests/local.intern"
   },
   "keywords": [
