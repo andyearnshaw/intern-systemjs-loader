@@ -25,7 +25,7 @@ Then, modify your Intern configuration to use the loader:
     }
 ```
 
-### Using Babel to transpile ES modules
+### Using Babel to transform ES modules and JSX code
 
 Simply `npm install systemjs-plugin-babel`, then specify the `loaderOptions`
 configuration in your `intern.js` file:
@@ -33,11 +33,6 @@ configuration in your `intern.js` file:
 ```
     loaderOptions: {
         transpiler: 'plugin-babel',
-
-        map: {
-            'plugin-babel': '/node_modules/systemjs-plugin-babel/plugin-babel.js',
-            'systemjs-babel-build': '/node_modules/systemjs-plugin-babel/systemjs-babel-browser.js'
-        }
     },
 
     excludeInstrumentation: true
@@ -46,7 +41,6 @@ configuration in your `intern.js` file:
 Disabling instrumentation of any ES modules is necessary as Istanbul fails hard
 if it tries to cover them.
 
-### Troubleshooting
-
-PhantomJS appears to hang without throwing errors if an ES module has a syntax
-error.  Use ChromeDriver instead of PhantomJS if testing locally.
+Several modules, including _plugin-babel_, _react_ and _fbjs_ are pre-mapped to
+their respective locations within node_modules.  This is done for convenience,
+they can be overridden using the `map` and `packages` configuration options.

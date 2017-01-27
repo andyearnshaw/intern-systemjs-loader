@@ -18,12 +18,30 @@
                 },
                 packages: {
                     'intern': { format: 'amd', defaultExtension: 'js' },
-                    'dojo': { format: 'amd', defaultExtension: 'js' }
+                    'dojo': { format: 'amd', defaultExtension: 'js' },
+                    'fbjs': {
+                        main: 'index.js',
+                        defaultExtension: 'js',
+                    },
+                    'react': {
+                        main: 'react.js',
+                        defaultExtension: 'js',
+
+                        map: {
+                            'object-assign': 'node_modules/object-assign/index.js',
+                        }
+                    }
                 },
                 map: {
                     'dojo': 'node_modules/dojo',
                     'intern': internBase,
-                    'intern/chai': internBase + '/browser_modules/chai/chai.js'
+                    'intern/chai': internBase + '/browser_modules/chai/chai.js',
+
+                    // These are required for transpiling
+                    'react': 'node_modules/react',
+                    'fbjs': 'node_modules/fbjs',
+                    'systemjs-babel-build': 'node_modules/systemjs-plugin-babel/systemjs-babel-browser.js',
+                    'plugin-babel': 'node_modules/systemjs-plugin-babel/plugin-babel.js'
                 }
             }]
         ];
@@ -111,7 +129,6 @@
 
             return normalize.call(this, name, parentName, parentAddress);
         };
-
     }
 
     function loadSystemJS() {
