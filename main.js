@@ -202,7 +202,14 @@
             var done = decanonicalize.call(this, name, id);
 
             if (/^intern\//.test(name)) {
-                done = done.replace(/^file:\/\//, '');
+                // remove absolute file urls with drive letters in Windows (i.e., file:///C:\...)
+                if (/^file:\/{3}\w:/.test(done)) {
+                    done = done.replace(/^file:\/{3}/, '');
+                }
+                else {
+                    // remove non-windows, or relative, file urls
+                    done = done.replace(/^file:\/\//, '');
+                }
             }
 
             return done;
